@@ -7,8 +7,8 @@ pragma solidity ^0.8.0;
 /// @dev This contract is written in Solidity version 0.8.0
 contract Ticketing {
 
-    event EventCreated(address indexed owner, uint256 indexed eventId, string name, uint256 VipticketPrice, uint256 SilverticketPrice, string eventDate);
-    event TicketBought(address indexed buyer, String category, uint256 ticketPrice );
+    event EventCreated(address indexed owner, uint256 indexed eventId, string name, uint256 VipticketPrice, uint256 SilverticketPrice, uint256 eventDate);
+    event TicketBought(address indexed buyer, string category, uint256 ticketPrice );
 
     /// @notice Struct for storing information about a ticket
     struct Ticket {
@@ -134,23 +134,33 @@ contract Ticketing {
         uint256 ticketPrice;
 
         require(block.timestamp <= eventToBuy.sellingDuration, "Ticket Selling Duration has passed");
-
+    }
         
 
-        if (keccak256(bytes32(_category)) == keccak256(bytes32("VIP"))) {
-            require(eventToBuy.vipSold < eventToBuy.numVipTickets, "All VIP tickets are sold out");
-            ticketsToBuy = eventToBuy.vipTickets;
-            numTicketsSold = eventToBuy.vipSold;
-            ticketPrice = eventToBuy.vipTicketPrice;
-            eventToBuy.vipSold++;
-        } else if (keccak256(bytes32(_category)) == keccak256(bytes32("Silver"))) {
-            require(eventToBuy.silverSold < eventToBuy.numSilverTickets, "All Silver tickets are sold out");
-            ticketsToBuy = eventToBuy.silverTickets;
-            numTicketsSold = eventToBuy.silverSold;
-            ticketPrice = eventToBuy.silverTicketPrice;
-            eventToBuy.silverSold++;
-        } else {
-            revert("Invalid ticket category");
+       function buyTicket(string memory _category) public payable {
+    Event storage eventToBuy = events[msg.sender];
+    uint256 ticketsToBuy;
+    uint256 numTicketsSold;
+    uint256 ticketPrice;
+
+    if (bytes32(abi.encodePacked(_category)) == bytes32(abi.encodePacked("VIP"))) {
+        require(eventToBuy.vipSold < eventToBuy.numVipTickets, "All VIP tickets are sold out");
+        ticketsToBuy = eventToBuy.vipTickets;
+        numTicketsSold = eventToBuy.vipSold;
+        ticketPrice = eventToBuy.vipTicketPrice;
+        eventToBuy.vipSold++;
+    } else if (bytes32(abi.encodePacked(_category)) == bytes32(abi.encodePacked("Silver"))) {
+        require(eventToBuy.silverSold < eventToBuy.numSilverTickets, "All Silver tickets are sold out");
+        ticketsToBuy = eventToBuy.silverTickets;
+        numTicketsSold = eventToBuy.silverSold;
+        ticketPrice = eventToBuy.silverTicketPrice;
+        eventToBuy.silverSold++;
+    } else {
+        revert("Invalid ticket category");
+    }
+}
+
+       
         }
 
         require(msg.value == ticketPrice, "Incorrect amount sent");
@@ -166,14 +176,14 @@ contract Ticketing {
 
         
 
-        emit TicketBought(msg.sender, _category, ticketPrice )
+        emit TicketBought(msg.sender, _category, ticketPrice );
     }
 
-    /// @notice Gets the information for an event
-    /// @param _eventId The ID of the event to retrieve information for
-    /// @return The address of the event owner, the number of VIP tickets, the number of Silver tickets,
-    /// the number of VIP tickets sold, the number of Silver tickets sold, the event name, the event date,
-    /// and the event venue
+    // @notice Gets the information for an event
+    // @param _eventId The ID of the event to retrieve information for
+    // @return The address of the event owner, the number of VIP tickets, the number of Silver tickets,
+    // the number of VIP tickets sold, the number of Silver tickets sold, the event name, the event date,
+    // and the event venue
     function getEvent(uint256 _eventId) public view returns (address eventOwner, uint256 eventId, uint256 numVipTickets, uint256 numSilverTickets, uint256 vipSold, uint256 silverSold, uint256 sellingDuration, string memory eventName, string memory _eventVenue, uint256 eventDate, Ticket[] memory vipTickets, Ticket[] memory silverTickets) {
         Event storage eventToGet = events[_eventId];
         return (eventToGet.owner, eventToGet.eventId, eventToGet.numVipTickets, eventToGet.numSilverTickets, eventToGet.vipSold, eventToGet.silverSold, eventToGet.sellingDuration, eventToGet.eventName,eventToGet.eventVenue, eventToGet.eventDate, eventToGet.vipTickets, eventToGet.silverTickets);
