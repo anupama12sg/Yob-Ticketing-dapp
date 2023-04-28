@@ -158,12 +158,7 @@ contract Ticketing {
     } else {
         revert("Invalid ticket category");
     }
-}
-
-       
-        }
-
-        require(msg.value == ticketPrice, "Incorrect amount sent");
+      require(msg.value == ticketPrice, "Incorrect amount sent");
         payable(eventToBuy.owner).transfer(ticketPrice);
         Ticket storage ticketToBuy = ticketsToBuy[numTicketsSold];
         require(!ticketToBuy.isSold, "Ticket already sold");
@@ -203,4 +198,8 @@ contract Ticketing {
         return allEvents;
     }
 
+
+
 }
+
+   
